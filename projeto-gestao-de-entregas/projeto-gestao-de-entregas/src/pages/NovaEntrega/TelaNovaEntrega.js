@@ -1,43 +1,64 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function NovaEntrega({ navigation }) {
-  const [endereco, setEndereco] = useState('');
-  const [descricao, setDescricao] = useState('');
+  const [nameClient, setNameClient] = useState('');
+  const [nameStore, setNameStore] = useState('');
+  const [street, setStreet] = useState('');
+  const [city, setCity] = useState('');
+  const [number, setNumber] = useState('');
+  const [complement, setComplement] = useState('');
+  const [zipCode, setZipCode] = useState('');
 
   const handleNovaEntrega = async () => {
-    if (!endereco || !descricao) {
-      alert('Preencha todos os campos.');
+    console.log('handleNovaEntrega chamado');
+
+    // Verificar se todos os campos obrigatórios estão preenchidos
+    if (!nameClient || !nameStore || !street || !city || !number || !zipCode) {
+      Alert.alert('Erro', 'Preencha todos os campos obrigatórios.');
+      console.log('Campos obrigatórios não preenchidos');
       return;
     }
 
     const novaEntrega = {
-      numero: Date.now().toString(),
-      endereco,
-      descricao,
-      status: 'Pendente',  // Definindo como pendente por padrão
+      nameClient,
+      nameStore,
+      address: {
+        street,
+        city,
+        number,
+        complement,
+        zipCode,
+      },
     };
 
+    console.log('Enviando dados para API:', novaEntrega);
+
     try {
-      // Obter as entregas atuais do AsyncStorage
-      const data = await AsyncStorage.getItem('@entregas');
-      const listaEntregas = data ? JSON.parse(data) : [];
+      const response = await fetch('http://localhost:8080/api/delivery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(novaEntrega),
+      });
 
-      // Adicionar nova entrega à lista
-      listaEntregas.push(novaEntrega);
+      console.log('Resposta da API:', response);
 
-      // Salvar novamente no AsyncStorage
-      await AsyncStorage.setItem('@entregas', JSON.stringify(listaEntregas));
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Dados retornados pela API:', data);
 
-      Alert.alert('Sucesso', 'Entrega cadastrada com sucesso!');
-
-      // Navegar para a TelaListaEntregas, passando as entregas
-      navigation.navigate('TelaListaEntregas', { entregas: listaEntregas });
-
+        Alert.alert('Sucesso', 'Entrega cadastrada com sucesso!');
+        navigation.navigate('DetalhesEntrega', { entrega: data });
+      } else {
+        const errorData = await response.json();
+        Alert.alert('Erro', `Não foi possível cadastrar a entrega: ${errorData.message}`);
+        console.error('Erro da API:', errorData);
+      }
     } catch (error) {
-      console.error('Erro ao salvar nova entrega:', error);
-      Alert.alert('Erro', 'Não foi possível salvar a entrega.');
+      console.error('Erro ao cadastrar entrega:', error);
+      Alert.alert('Erro', 'Falha na comunicação com o servidor.');
     }
   };
 
@@ -47,16 +68,51 @@ export default function NovaEntrega({ navigation }) {
 
       <TextInput 
         style={styles.input}
-        placeholder="Endereço"
-        value={endereco}
-        onChangeText={setEndereco}
+        placeholder="Nome do Cliente"
+        value={nameClient}
+        onChangeText={setNameClient}
       />
 
-      <TextInput
+      <TextInput 
         style={styles.input}
-        placeholder="Descrição"
-        value={descricao}
-        onChangeText={setDescricao}
+        placeholder="Nome da Loja"
+        value={nameStore}
+        onChangeText={setNameStore}
+      />
+
+      <TextInput 
+        style={styles.input}
+        placeholder="Rua"
+        value={street}
+        onChangeText={setStreet}
+      />
+
+      <TextInput 
+        style={styles.input}
+        placeholder="Cidade"
+        value={city}
+        onChangeText={setCity}
+      />
+
+      <TextInput 
+        style={styles.input}
+        placeholder="Número"
+        value={number}
+        onChangeText={setNumber}
+      />
+
+      <TextInput 
+        style={styles.input}
+        placeholder="Complemento (opcional)"
+        value={complement}
+        onChangeText={setComplement}
+      />
+
+      <TextInput 
+        style={styles.input}
+        placeholder="CEP"
+        value={zipCode}
+        onChangeText={setZipCode}
       />
 
       <View style={styles.buttonContainer}>
@@ -83,10 +139,11 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: '#ccc',
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
+    borderRadius: 5,
   },
   buttonContainer: {
     marginTop: 20,
