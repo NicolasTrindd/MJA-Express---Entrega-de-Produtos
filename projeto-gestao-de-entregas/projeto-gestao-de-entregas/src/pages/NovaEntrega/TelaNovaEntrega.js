@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
+import BotaoSalvar from '../../components/BotaoSalvar';
+import TopBar from '../../components/TopBar';
+import styles from './NovaEntregaStyles';
 
 export default function NovaEntrega({ navigation }) {
   const [nameClient, setNameClient] = useState('');
@@ -13,7 +16,6 @@ export default function NovaEntrega({ navigation }) {
   const handleNovaEntrega = async () => {
     console.log('handleNovaEntrega chamado');
 
-    // Verificar se todos os campos obrigatórios estão preenchidos
     if (!nameClient || !nameStore || !street || !city || !number || !zipCode) {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios.');
       console.log('Campos obrigatórios não preenchidos');
@@ -64,6 +66,8 @@ export default function NovaEntrega({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <TopBar />
+
       <Text style={styles.title}>Cadastrar Nova Entrega</Text>
 
       <TextInput 
@@ -116,36 +120,8 @@ export default function NovaEntrega({ navigation }) {
       />
 
       <View style={styles.buttonContainer}>
-        <Button 
-          title="Salvar"
-          onPress={handleNovaEntrega}
-        />
+        <BotaoSalvar onPress={handleNovaEntrega} />
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  buttonContainer: {
-    marginTop: 20,
-  },
-});

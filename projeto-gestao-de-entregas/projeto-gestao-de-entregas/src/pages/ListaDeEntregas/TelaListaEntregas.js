@@ -1,18 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Animated,
+  Alert,
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import EntregaCard from '../../components/EntregaCard';
+import ScrollBar from '../../components/ScrollBar'; 
+import TopBar from '../../components/TopBar';
+import styles from './ListaStyle';
 
-import BotaoVoltar from '../../components/BotaoVoltar';
-import CardEntrega from '../../components/CardEntrega';
-
-const COR_PRIMARIA = '#FF6F00';  // Laranja principal
-const COR_SECUNDARIA = '#FF9100'; // Laranja mais claro
-const COR_TEXTO = '#333333'; // Cor do texto principal
-const COR_FUNDO = '#FFF3E0'; // Fundo suave
 
 export default function TelaListaEntregas({ navigation }) {
   const [listaEntregas, setListaEntregas] = useState([]);
+  const scrollY = useRef(new Animated.Value(0)).current; 
+  const [contentHeight, setContentHeight] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -20,91 +25,66 @@ export default function TelaListaEntregas({ navigation }) {
     }, [])
   );
 
-  // Função para carregar as entregas do AsyncStorage
   const carregarEntregas = async () => {
     try {
-      const data = await AsyncStorage.getItem('@entregas');
-      if (data) {
-        setListaEntregas(JSON.parse(data));
-      } else {
-        setListaEntregas([]);
-      }
+      const response = await fetch('http://localhost:8080/api/delivery/last-week');
+      if (!response.ok) throw new Error('Erro ao buscar entregas');
+      const data = await response.json();
+      setListaEntregas(data);
     } catch (error) {
-      console.error('Erro ao carregar as entregas:', error);
+      console.error('Erro ao carregar entregas:', error);
+      Alert.alert('Erro', 'Não foi possível carregar as entregas.');
     }
   };
 
-  // Função para remover a entrega
-  const removerEntrega = async (numeroEntrega) => {
+  const handleDetalhesEntrega = async (id) => {
     try {
-      // Alerta de confirmação
-      Alert.alert(
-        'Confirmar Remoção',
-        'Tem certeza que deseja remover esta entrega?',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel',
-          },
-          {
-            text: 'Remover',
-            onPress: async () => {
-              const novasEntregas = listaEntregas.filter(item => item.numero !== numeroEntrega);
-              setListaEntregas(novasEntregas);
-              await AsyncStorage.setItem('@entregas', JSON.stringify(novasEntregas));
-              alert('Entrega removida com sucesso!');
-            },
-          },
-        ]
-      );
+      const response = await fetch(`http://localhost:8080/api/delivery/${id}`);
+      if (!response.ok) throw new Error('Erro ao buscar detalhes da entrega');
+      const entregaDetalhes = await response.json();
+      navigation.navigate('DetalhesEntrega', { entrega: entregaDetalhes });
     } catch (error) {
-      console.error('Erro ao remover entrega:', error);
-      alert('Erro ao remover a entrega.');
+      console.error('Erro ao carregar detalhes da entrega:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os detalhes da entrega.');
     }
-  };
-
-  const handleDetalhesEntrega = (entrega) => {
-    navigation.navigate('TelaDetalhesEntrega', { entrega });
   };
 
   return (
-    <View style={styles.container}>
-      <BotaoVoltar onPress={() => navigation.goBack()} />
-
+    <View
+      style={styles.container}
+      onLayout={(event) => {
+        const { height } = event.nativeEvent.layout;
+        setContainerHeight(height); 
+      }}
+    >
+      <TopBar />
       <Text style={styles.title}>Lista de Entregas</Text>
 
-      <ScrollView style={styles.scrollContainer}>
-        <FlatList
-          data={listaEntregas}
-          keyExtractor={(item) => item.numero}
-          renderItem={({ item }) => (
-            <CardEntrega
-              entrega={item}
-              onPressDetalhes={() => handleDetalhesEntrega(item)} // Passando a entrega para a tela de detalhes
-              onPressRemover={() => removerEntrega(item.numero)} // Botão de remover
-            />
+      <View style={{ flex: 1, flexDirection: 'row' }}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          onContentSizeChange={(width, height) => setContentHeight(height)} 
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
           )}
+        >
+          {listaEntregas.map((entrega) => (
+            <EntregaCard
+              key={entrega.id}
+              entrega={entrega}
+              onPress={handleDetalhesEntrega}
+            />
+          ))}
+        </ScrollView>
+
+        <ScrollBar
+          scrollY={scrollY}
+          contentHeight={contentHeight}
+          containerHeight={containerHeight}
         />
-      </ScrollView>
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: COR_FUNDO, // Cor de fundo suave
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: COR_PRIMARIA,  // Cor laranja para o título
-  },
-  scrollContainer: {
-    flex: 1,
-    width: '100%',
-  },
-});

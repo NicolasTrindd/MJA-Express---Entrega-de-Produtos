@@ -16,12 +16,12 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={TelaHome} />
-        <Stack.Screen name="EntregasFeitas" component={TelaEntregasFeitas} />
-        <Stack.Screen name="EntregasPendentes" component={TelaEntregasPendentes} />
-        <Stack.Screen name="CadastroEntrega" component={TelaCadastroEntrega} />
-        <Stack.Screen name="ListaEntregas" component={TelaListaEntregas} />
-        <Stack.Screen name="DetalhesEntrega" component={TelaDetalhesEntrega} />
+        <Stack.Screen name="Home" component={TelaHome} options={{ headerShown: false }}/>
+        <Stack.Screen name="EntregasFeitas" component={TelaEntregasFeitas} options={{ headerShown: false }} />
+        <Stack.Screen name="EntregasPendentes" component={TelaEntregasPendentes} options={{ headerShown: false }} />
+        <Stack.Screen name="CadastroEntrega" component={TelaCadastroEntrega} options={{ headerShown: false }} />
+        <Stack.Screen name="ListaEntregas" component={TelaListaEntregas} options={{ headerShown: false }} />
+        <Stack.Screen name="DetalhesEntrega" component={TelaDetalhesEntrega} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -20,9 +20,6 @@
         "backgroundColor": "#ffffff"
       }
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
     "description": "Projeto acadêmico voltado para a gestão de entregas."
   }
 }
