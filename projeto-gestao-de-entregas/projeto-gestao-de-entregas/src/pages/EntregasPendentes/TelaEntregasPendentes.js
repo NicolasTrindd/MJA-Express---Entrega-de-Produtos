@@ -1,77 +1,90 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Animated,
+  Alert,
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import EntregaCard from '../../components/EntregaCard';
+import ScrollBar from '../../components/ScrollBar'; 
+import TopBar from '../../components/TopBar';
+import styles from './PendentesStyle';
 
-export default function EntregasPendentes({ route }) {
-  const [entregasPendentes, setEntregasPendentes] = useState([]);
+export default function TelaEntregasPendentes({ navigation }) {
+  const [listaEntregasPendentes, setListaEntregasPendentes] = useState([]);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [contentHeight, setContentHeight] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
 
-  useEffect(() => {
-    carregarEntregasPendentes();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      carregarEntregasPendentes();
+    }, [])
+  );
 
   const carregarEntregasPendentes = async () => {
     try {
-      const data = await AsyncStorage.getItem('@entregas');
-      if (data) {
-        const entregas = JSON.parse(data);
-        const pendentes = entregas.filter((entrega) => entrega.status === 'Pendente');
-        setEntregasPendentes(pendentes);
-      }
-    } catch (e) {
-      console.error('Erro ao carregar entregas pendentes:', e);
+      const response = await fetch('http://localhost:8080/api/delivery/pending');
+      if (!response.ok) throw new Error('Erro ao buscar entregas pendentes');
+      const data = await response.json();
+      setListaEntregasPendentes(data);
+    } catch (error) {
+      console.error('Erro ao carregar entregas pendentes:', error);
+      Alert.alert('Erro', 'Não foi possível carregar as entregas pendentes.');
+    }
+  };
+
+  const handleDetalhesEntrega = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/delivery/${id}`);
+      if (!response.ok) throw new Error('Erro ao buscar detalhes da entrega');
+      const entregaDetalhes = await response.json();
+      navigation.navigate('DetalhesEntrega', { entrega: entregaDetalhes });
+    } catch (error) {
+      console.error('Erro ao carregar detalhes da entrega:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os detalhes da entrega.');
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={(event) => {
+        const { height } = event.nativeEvent.layout;
+        setContainerHeight(height);
+      }}
+    >
+
+      <TopBar />
       <Text style={styles.title}>Entregas Pendentes</Text>
-      {entregasPendentes.length > 0 ? (
-        <FlatList
-          data={entregasPendentes}
-          keyExtractor={(item) => item.numero}
-          renderItem={({ item }) => (
-            <View style={styles.entregaContainer}>
-              <Text style={styles.entregaText}>Endereço: {item.endereco}</Text>
-              <Text style={styles.entregaText}>Descrição: {item.descricao}</Text>
-            </View>
+
+      <View style={{ flex: 1, flexDirection: 'row' }}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          onContentSizeChange={(width, height) => setContentHeight(height)}
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
           )}
+        >
+          {listaEntregasPendentes.map((entrega) => (
+            <EntregaCard
+              key={entrega.id}
+              entrega={entrega}
+              onPress={handleDetalhesEntrega}
+            />
+          ))}
+        </ScrollView>
+
+        <ScrollBar
+          scrollY={scrollY}
+          contentHeight={contentHeight}
+          containerHeight={containerHeight}
         />
-      ) : (
-        <Text style={styles.noEntregasText}>Nenhuma entrega pendente.</Text>
-      )}
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#FFF3E2',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FF6B3D',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  entregaContainer: {
-    backgroundColor: '#FFE0CC',
-    padding: 15,
-    marginVertical: 8,
-    borderRadius: 10,
-    borderLeftWidth: 5,
-    borderLeftColor: '#FF6B3D',
-  },
-  entregaText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  noEntregasText: {
-    fontSize: 18,
-    color: '#FF6B3D',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-});

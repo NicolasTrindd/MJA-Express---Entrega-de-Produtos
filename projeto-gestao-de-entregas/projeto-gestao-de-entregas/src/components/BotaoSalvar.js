@@ -4,7 +4,7 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 export default function BotaoSalvar({ onPress }) {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
-      <Text style={styles.buttonText}>Salvar Entregas</Text>
+      <Text style={styles.buttonText}>Salvar Entrega</Text>
     </TouchableOpacity>
   );
 }
@@ -16,6 +16,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 20,
     alignItems: 'center',
+    backgroundColor: '#FF8C00'
   },
   buttonText: {
     color: '#FFFFFF',

@@ -1,68 +1,44 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import TopBar from '../../components/TopBar';
+import styles from './HomeStyle';
 
-export default function TelaHome({ navigation }) {  // Usando 'navigation' aqui também
-  const [bemVindo, setBemVindo] = useState('Bem Vindo ao MJA - Gestão de Entregas');
+export default function TelaHome({ navigation }) {
+  const [bemVindo, setBemVindo] = useState('Gestão de Entregas');
 
   return (
     <View style={styles.container}>
+      <TopBar />
+
       <Text style={styles.title}>{bemVindo}</Text>
 
-      <View style={styles.buttonContainer}>
-        <Button 
-          title="Lista Completa de Entregas"
-          onPress={() => navigation.navigate('ListaEntregas')}  // Usando 'navigation.navigate'
-        />
-      </View>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate('ListaEntregas')}
+      >
+        <Text style={styles.buttonText}>Lista Completa de Entregas</Text>
+      </TouchableOpacity>
 
-      <View style={styles.buttonContainer}>
-        <Button 
-          title="Entregas Feitas"
-          onPress={() => navigation.navigate('EntregasFeitas')}
-        />
-      </View>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate('EntregasFeitas')}
+      >
+        <Text style={styles.buttonText}>Entregas Feitas</Text>
+      </TouchableOpacity>
 
-      <View style={styles.buttonContainer}>
-        <Button 
-          title="Entregas Pendentes"
-          onPress={() => navigation.navigate('EntregasPendentes')}
-        />
-      </View>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate('EntregasPendentes')}
+      >
+        <Text style={styles.buttonText}>Entregas Pendentes</Text>
+      </TouchableOpacity>
 
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Nova Entrega"
-          onPress={() => navigation.navigate('CadastroEntrega')}
-        />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Sair"
-          onPress={() => navigation.navigate('Login')}  // Navegar de volta para a tela de Login
-        />
-      </View>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate('CadastroEntrega')}
+      >
+        <Text style={styles.buttonText}>Nova Entrega</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#FFFAF0',  // Fundo suave laranja claro
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FF8C00',  // Laranja intenso para o título
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    marginVertical: 10,
-    width: '80%',
-  },
-});
